@@ -265,13 +265,11 @@ def get_body_text(driver):
 
 
 def handle_captcha_if_present(driver):
-    while True:
-        body_text = get_body_text(driver)
-        if CAPTCHA_TEXT in body_text:
-            show_info("Captcha Detected", "Solve captcha and click OK")
-            time.sleep(2)
-            continue
-        break
+    body_text = get_body_text(driver)
+    if CAPTCHA_TEXT in body_text:
+        print("ERROR: Captcha Detected! Cannot solve in headless mode.")
+        # Raise exception to skip this page
+        raise Exception("CAPTCHA_DETECTED")
 
 
 def open_url(driver, url, expect_text=None, timeout=60):
@@ -324,7 +322,7 @@ def handle_server_or_page_error(driver, ws, wb, output_path):
         save_workbook_safe(wb, output_path)
         return "ERROR_MOVE_NEXT"
 
-    # Case 2: HTTPS / server error - popup and wait for user reload
+    # Case 2: HTTPS / server error
     server_error_words = [
         "HTTP ERROR",
         "This page isn’t working",
@@ -340,12 +338,8 @@ def handle_server_or_page_error(driver, ws, wb, output_path):
     ]
 
     if any(word.lower() in body_text.lower() for word in server_error_words):
-        show_info(
-            "Server Error",
-            "HTTPS/server error found.\n\nPlease reload the page manually, then click OK."
-        )
-        time.sleep(2)
-        return "RECHECK"
+        print("ERROR: HTTPS/server error found. Cannot manually reload in headless mode.")
+        return "ERROR_MOVE_NEXT"
 
     return "OK"
 
