@@ -249,16 +249,12 @@ def create_driver():
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--disable-background-timer-throttling")
     options.add_argument("--disable-backgrounding-occluded-windows")
-    options.add_argument("--disable-renderer-backgrounding")
-    options.add_argument("--disable-features=CalculateNativeWinOcclusion")
-    
     # Required for GitHub Actions headless execution to prevent hanging
-    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-dev-shm-usage")
 
-    driver = uc.Chrome(options=options, version_main=chrome_major)
+    driver = uc.Chrome(options=options, version_main=chrome_major, headless=True)
     driver.set_page_load_timeout(60)
     return driver
 
@@ -281,6 +277,10 @@ def handle_captcha_if_present(driver):
 def open_url(driver, url, expect_text=None, timeout=60):
     driver.get(url)
     time.sleep(3)
+    
+    # Debug info to understand what the browser sees
+    print(f"DEBUG: Loaded page. Current Title: '{driver.title}'")
+    
     handle_captcha_if_present(driver)
 
     if expect_text:
