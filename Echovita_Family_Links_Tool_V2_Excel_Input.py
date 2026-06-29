@@ -4,6 +4,7 @@ import math
 import time
 import subprocess
 import sys
+import traceback
 
 from openpyxl import Workbook, load_workbook
 import undetected_chromedriver as uc
@@ -255,7 +256,7 @@ def create_driver():
     options.add_argument("--disable-dev-shm-usage")
 
     driver = uc.Chrome(options=options, version_main=chrome_major, headless=True)
-    driver.set_page_load_timeout(60)
+    driver.set_page_load_timeout(20)
     return driver
 
 
@@ -275,11 +276,24 @@ def handle_captcha_if_present(driver):
 
 
 def open_url(driver, url, expect_text=None, timeout=60):
-    driver.get(url)
-    time.sleep(3)
+    try:
+        driver.get(url)
+    except Exception as e:
+        print("Page load timeout:", e)
+
+    print("=" * 80)
+    print("URL :", driver.current_url)
+    print("TITLE :", driver.title)
+    print("=" * 80)
+
+    time.sleep(5)
     
-    # Debug info to understand what the browser sees
-    print(f"DEBUG: Loaded page. Current Title: '{driver.title}'")
+    try:
+        print("PAGE SOURCE START:")
+        print(driver.page_source[:3000])
+        print("PAGE SOURCE END.")
+    except Exception:
+        pass
     
     handle_captcha_if_present(driver)
 
@@ -1027,13 +1041,10 @@ def run():
         show_info("All URLs Done", f"Output saved in excel:\n{output_path}")
 
     except Exception as e:
-        err_text = (
-            f"An error occurred.\n\n"
-            f"Error: {str(e)}\n\n"
-            f"The tool will now close safely."
-        )
-        print(f"ERROR: {str(e)}")
-        show_error("Tool Error", err_text)
+        print("FATAL ERROR OCCURRED. TRACEBACK:")
+        traceback.print_exc()
+        print(f"ERROR MESSAGE: {str(e)}")
+        raise
 
     finally:
         try:
