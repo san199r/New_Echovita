@@ -251,6 +251,12 @@ def create_driver():
     options.add_argument("--disable-backgrounding-occluded-windows")
     options.add_argument("--disable-renderer-backgrounding")
     options.add_argument("--disable-features=CalculateNativeWinOcclusion")
+    
+    # Required for GitHub Actions headless execution to prevent hanging
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
 
     driver = uc.Chrome(options=options, version_main=chrome_major)
     driver.set_page_load_timeout(60)
